@@ -2,7 +2,7 @@ import {
   clerkMiddleware,
   createRouteMatcher,
 } from "@clerk/nextjs/server";
-import { NextRequest, NextResponse } from "next/server";
+import { NextFetchEvent, NextRequest, NextResponse } from "next/server";
 
 const isProtectedRoute = createRouteMatcher([
   "/chat(.*)",
@@ -22,11 +22,14 @@ const authMiddleware = clerkMiddleware(
   }
 );
 
-export default function middleware(req: NextRequest) {
+export default function middleware(
+  req: NextRequest,
+  event: NextFetchEvent
+) {
   if (!hasClerkEnv) {
     return NextResponse.next();
   }
-  return authMiddleware(req);
+  return authMiddleware(req, event);
 }
 
 export const config = {
