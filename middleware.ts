@@ -2,16 +2,32 @@ import {
   clerkMiddleware,
   createRouteMatcher,
 } from "@clerk/nextjs/server";
+import { NextRequest, NextResponse } from "next/server";
 
 const isProtectedRoute = createRouteMatcher([
   "/chat(.*)",
 ]);
 
-export default clerkMiddleware(async (auth, req) => {
-  if (isProtectedRoute(req)) {
-    await auth.protect();
+const hasClerkEnv =
+  Boolean(
+    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+  ) &&
+  Boolean(process.env.CLERK_SECRET_KEY);
+
+const authMiddleware = clerkMiddleware(
+  async (auth, req) => {
+    if (isProtectedRoute(req)) {
+      await auth.protect();
+    }
   }
-});
+);
+
+export default function middleware(req: NextRequest) {
+  if (!hasClerkEnv) {
+    return NextResponse.next();
+  }
+  return authMiddleware(req);
+}
 
 export const config = {
   matcher: ["/((?!_next|.*\\..*).*)"],
